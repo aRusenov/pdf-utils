@@ -14,54 +14,52 @@ import com.itextpdf.kernel.utils.PageRange;
 
 public class PdfMerger {
 
-	/**
-	 * Merges the given PDF input streams and returns the resulting PDF as raw
-	 * bytes. The caller is responsible to close the underlying streams if the method fails.
-	 * 
-	 * @param sources the source PDF streams
-	 * @throws IOException
-	 */
-	public static byte[] merge(List<Source> sources) throws IOException {
-		
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		try (PdfDocument merged = new PdfDocument(new PdfWriter(outputStream))) {
-			for (Source source : sources) {
-				try (PdfDocument currentDoc = new PdfDocument(new PdfReader(source.getStream()))) {
+    /**
+     * Merges the given PDF input streams and returns the resulting PDF as raw
+     * bytes. The caller is responsible to close the underlying streams if the method fails.
+     *
+     * @param sources the source PDF streams
+     * @throws IOException
+     */
+    public static byte[] merge(List<Source> sources) throws IOException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try (PdfDocument merged = new PdfDocument(new PdfWriter(outputStream))) {
+            for (Source source : sources) {
+                try (PdfDocument currentDoc = new PdfDocument(new PdfReader(source.getStream()))) {
+                    if (StringUtils.isNotBlank(source.getPageRange())) {
+                        currentDoc.copyPagesTo(new PageRange(source.getPageRange()).getAllPages(), merged);
+                    } else {
+                        currentDoc.copyPagesTo(1, currentDoc.getNumberOfPages(), merged);
+                    }
+                }
+            }
+        }
 
-					if (StringUtils.isNotBlank(source.getPageRange())) {
-						currentDoc.copyPagesTo(new PageRange(source.getPageRange()).getAllPages(), merged);
-					} else {
-						currentDoc.copyPagesTo(1, currentDoc.getNumberOfPages(), merged);
-					}
-				}
-			}
-		}
+        return outputStream.toByteArray();
+    }
 
-		return outputStream.toByteArray();
-	}
+    public static class Source {
 
-	public static class Source {
+        private String key;
+        private String pageRange;
+        private InputStream stream;
 
-		private String key;
-		private String pageRange;
-		private InputStream stream;
+        public Source(String key, String pageRange, InputStream stream) {
+            this.key = key;
+            this.pageRange = pageRange;
+            this.stream = stream;
+        }
 
-		public Source(String key, String pageRange, InputStream stream) {
-			this.key = key;
-			this.pageRange = pageRange;
-			this.stream = stream;
-		}
+        public String getKey() {
+            return key;
+        }
 
-		public String getKey() {
-			return key;
-		}
+        public String getPageRange() {
+            return pageRange;
+        }
 
-		public String getPageRange() {
-			return pageRange;
-		}
-
-		public InputStream getStream() {
-			return stream;
-		}
-	}
+        public InputStream getStream() {
+            return stream;
+        }
+    }
 }

@@ -35,6 +35,13 @@ public class PdfStamper {
 		acroForm = PdfAcroForm.getAcroForm(doc, true);
 	}
 
+	/**
+	 * Sets the given image as content of fields with key {@code fieldKey}.
+	 * The image is scaled to fit into the field.
+	 * @param fieldKey the field key
+	 * @param imageStream the input stream of te image
+	 * @throws IOException
+	 */
 	public PdfStamper setImageField(String fieldKey, InputStream imageStream) throws IOException {
 		PdfFormField pdfField = acroForm.getFormFields().get(fieldKey);
 		if (pdfField == null) {
@@ -47,8 +54,8 @@ public class PdfStamper {
 		float x2 = (float) position.getAsNumber(2).getValue();
 		float y2 = (float) position.getAsNumber(3).getValue();
 		
-		float width = (float) (x2 - x1);
-		float height = (float) (y2 - y1);
+		float width = x2 - x1;
+		float height = y2 - y1;
 
 		byte[] imageBytes = IOUtils.toByteArray(imageStream);
 		Image image = new Image(ImageDataFactory.create(imageBytes));
@@ -59,9 +66,13 @@ public class PdfStamper {
 		d.add(image);
 		return this;
 	}
-	
+
+	/**
+	 * Sets the given text value to fields with key {@code fieldKey}.
+	 * @param fieldKey the field key
+	 * @param text the text value
+	 */
 	public PdfStamper setTextField(String fieldKey, String text) {
-		PdfAcroForm acroForm = PdfAcroForm.getAcroForm(doc, true);
 		PdfFormField pdfField = acroForm.getFormFields().get(fieldKey);
 		if (pdfField != null) {
 			pdfField.setValue(text);
@@ -70,6 +81,10 @@ public class PdfStamper {
 		return this;
 	}
 
+	/**
+	 * Saves all modifications and flattens the PDF.
+	 * @return the stamped PDF holding an input stream to be read from.
+	 */
 	public StampedPdf stamp() {
 		try {
 			acroForm.flattenFields();
